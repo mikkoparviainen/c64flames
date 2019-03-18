@@ -11,7 +11,11 @@ rowlen=40
         rts
 ;scrptr  word $d800
 ;dataptr word array
-flames  
+flames  lda #<colors ; store color buffer ptr to cassette buffer
+        sta $b2
+        lda #>colors
+        sta $b3
+
         lda #<rowstr ; first do the bottom line
         sta $fb
         lda #>rowstr
@@ -33,9 +37,18 @@ flames
         sta $fe
 
         ldx #24 ; never do the last row as it is white anyway
-@outer
-        ldy #0 
+@outer  ldy #0 
 @inner  lda ($fb),y
+        sty tmpy
+
+        lsr a
+        lsr a
+        lsr a
+        lsr a
+        tay
+        lda ($b2),y
+
+        ldy tmpy
         sta ($fd),y
         iny
         cpy #rowlen ; row
@@ -58,6 +71,8 @@ flames
         sta $fe
         jmp @outer
 flamend rts
+tmpy    byte 0
+
 init    lda #0 ; 0 is black
         lda #5 ; 5 is green, for debug
         sta bkg
@@ -76,8 +91,10 @@ init    lda #0 ; 0 is black
         lda #>colmem
         sta $fc
         lda #$5
+        sta $fd
         jsr tuhat
         rts
+
 tuhat   ldx #4; $fb-$fc target, $fd number, x number of inner loops
 touter  ldy #0
         lda $fd
@@ -96,6 +113,20 @@ tinner  sta ($fb),y
         sta $fc
         jmp touter
 tend    rts
-array   ;dcb 25*40,1 ; white for debug
-        dcb 24*40,0 ; start: 24 lines of empty
-        dcb 40,1    ; and 1 line of white
+array   dcb 40,0 ; stats for debug...
+        dcb 40,$10
+        dcb 40,$20
+        dcb 40,$38
+        dcb 40,$40
+        dcb 40,$60
+        dcb 360,$70
+        dcb 40,$88
+        dcb 80,$a0
+        dcb 40,$b0
+        dcb 40,$c8
+        dcb 120,$e0
+        dcb 40,$f0
+        dcb 40,$ff
+        ;dcb 24*40,0 ; start: 24 lines of empty
+        ;dcb 40,1    ; and 1 line of white
+colors  dcb 9,9,2,2,2,8,8,8,4,4,4,7,7,7,1,1
