@@ -38,18 +38,32 @@ flames  lda #<colors ; store color buffer ptr to cassette buffer
 
         ldx #24 ; never do the last row as it is white anyway
 @outer  ldy #0 
-@inner  lda ($fb),y
-        sty tmpy
+@inner  ;lda ($fb),y
+        sty cur
 
-        lsr a
-        lsr a
+        clc
+        tya ; add 40 to y to point to the next row
+        adc #40 ; never overflows because y goes only to rowlen (25)
+        tay
+
+        lda ($fb),y ; load the next row value
+        clc
+        sbc #$20
+        pha ; save next row-$20 as current row on stack
+
+        lsr a ; divide the number by 16 for an index into the
+        lsr a ; color list
         lsr a
         lsr a
         tay
         lda ($b2),y
 
-        ldy tmpy
-        sta ($fd),y
+        ldy cur
+        sta ($fd),y ; save the color to colmem
+
+        pla ; get the current value from stack
+        sta ($fb),y
+
         iny
         cpy #rowlen ; row
         bne @inner
@@ -71,7 +85,7 @@ flames  lda #<colors ; store color buffer ptr to cassette buffer
         sta $fe
         jmp @outer
 flamend rts
-tmpy    byte 0
+cur     byte 0
 
 init    lda #0 ; 0 is black
         lda #5 ; 5 is green, for debug
@@ -113,20 +127,20 @@ tinner  sta ($fb),y
         sta $fc
         jmp touter
 tend    rts
-array   dcb 40,0 ; stats for debug...
-        dcb 40,$10
-        dcb 40,$20
-        dcb 40,$38
-        dcb 40,$40
-        dcb 40,$60
-        dcb 360,$70
-        dcb 40,$88
-        dcb 80,$a0
-        dcb 40,$b0
-        dcb 40,$c8
-        dcb 120,$e0
-        dcb 40,$f0
-        dcb 40,$ff
-        ;dcb 24*40,0 ; start: 24 lines of empty
-        ;dcb 40,1    ; and 1 line of white
+array   ;dcb 40,0 ; stats for debug...
+        ;dcb 40,$10
+        ;dcb 40,$20
+        ;dcb 40,$38
+        ;dcb 40,$40
+        ;dcb 40,$60
+        ;dcb 360,$70
+        ;dcb 40,$88
+        ;dcb 80,$a0
+        ;dcb 40,$b0
+        ;dcb 40,$c8
+        ;dcb 120,$e0
+        ;dcb 40,$f0
+        ;dcb 40,$ff
+        dcb 24*40,0 ; start: 24 lines of empty
+        dcb 40,1    ; and 1 line of white
 colors  dcb 9,9,2,2,2,8,8,8,4,4,4,7,7,7,1,1
