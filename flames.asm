@@ -37,8 +37,8 @@ flames  lda #<colors ; store color buffer ptr to cassette buffer
         sta $fe
 
         ldx #24 ; never do the last row as it is white anyway
-@outer  ldy #0 
-@inner  ;lda ($fb),y
+outer   ldy #0
+inner   ;lda ($fb),y
         sty cur
 
         clc
@@ -47,9 +47,13 @@ flames  lda #<colors ; store color buffer ptr to cassette buffer
         tay
 
         lda ($fb),y ; load the next row value
-        clc
+        cmp #$20
+        bcs subt
+        lda #0
+        jmp cont
+subt    clc
         sbc #$20
-        pha ; save next row-$20 as current row on stack
+cont    pha ; save next row-$20 as current row on stack
 
         lsr a ; divide the number by 16 for an index into the
         lsr a ; color list
@@ -66,8 +70,9 @@ flames  lda #<colors ; store color buffer ptr to cassette buffer
 
         iny
         cpy #rowlen ; row
-        bne @inner
-        dex
+        beq noinner
+        jmp inner
+noinner dex
         beq flamend
         clc
         lda $fb
@@ -83,7 +88,7 @@ flames  lda #<colors ; store color buffer ptr to cassette buffer
         lda $fe
         adc #0
         sta $fe
-        jmp @outer
+        jmp outer
 flamend rts
 cur     byte 0
 
@@ -143,4 +148,4 @@ array   ;dcb 40,0 ; stats for debug...
         ;dcb 40,$ff
         dcb 24*40,0 ; start: 24 lines of empty
         dcb 40,1    ; and 1 line of white
-colors  dcb 9,9,2,2,2,8,8,8,4,4,4,7,7,7,1,1
+colors  dcb 0,0,9,9,2,2,8,8,4,4,4,7,7,7,1,1
