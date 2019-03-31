@@ -4,3 +4,4 @@ bak/*
 *.prg
 *.comp.asm
 *.tmp
+*.dbg
