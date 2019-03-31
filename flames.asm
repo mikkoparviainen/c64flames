@@ -21,13 +21,13 @@ flames  lda #<colors ; store color buffer ptr to cassette buffer
         lda #>rowstr
         sta $fc
         ldy #0
-        lda #1
+        lda #1 ; 1 is white
 @loop   sta ($fb),y
         iny
         cpy #40
         bne @loop
 
-        lda #<array ; $fb-$fc : ptr to array, $fd-$fe : ptr to colmem
+mainl   lda #<array ; $fb-$fc : ptr to array, $fd-$fe : ptr to colmem
         sta $fb
         lda #>array
         sta $fc
@@ -43,7 +43,7 @@ inner   ;lda ($fb),y
 
         clc
         tya ; add 40 to y to point to the next row
-        adc #40 ; never overflows because y goes only to rowlen (25)
+        adc #rowlen ; never overflows because y goes only to rowlen (25)
         tay
 
         lda ($fb),y ; load the next row value
@@ -70,6 +70,7 @@ cont    pha ; save next row-$20 as current row on stack
 
         iny
         cpy #rowlen ; row
+        ;cpy #2 ; do two columns for debug
         beq noinner
         jmp inner
 noinner dex
@@ -89,7 +90,8 @@ noinner dex
         adc #0
         sta $fe
         jmp outer
-flamend rts
+flamend ;rts
+        jmp mainl
 cur     byte 0
 
 init    lda #0 ; 0 is black
@@ -147,5 +149,5 @@ array   ;dcb 40,0 ; stats for debug...
         ;dcb 40,$f0
         ;dcb 40,$ff
         dcb 24*40,0 ; start: 24 lines of empty
-        dcb 40,1    ; and 1 line of white
+        dcb 40,$ff    ; and 1 line of white
 colors  dcb 0,0,9,9,2,2,8,8,4,4,4,7,7,7,1,1
