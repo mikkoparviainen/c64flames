@@ -42,8 +42,7 @@ mainl   lda #<array ; $fb-$fc : ptr to array, $fd-$fe : ptr to colmem
 
         ldx #24 ; never do the last row as it is white anyway
 outer   ldy #0
-inner   ;lda ($fb),y
-        sty cur
+inner   sty cur
 
         clc
         tya ; add 40 to y to point to the next row
@@ -55,7 +54,7 @@ inner   ;lda ($fb),y
         bcs subt
         lda #0
         jmp cont
-subt    clc
+subt    sec
         sbc #decay
         jsr randsub
 cont    pha ; save next row-$20 as current row on stack
@@ -75,6 +74,7 @@ cont    pha ; save next row-$20 as current row on stack
 
         iny
         cpy #rowlen ; row
+        ;cpy #2 ; debug with 2 columns
         beq noinner
         jmp inner
 noinner dex
@@ -123,7 +123,7 @@ addreal clc
         rts
 
 init    lda #0 ; 0 is black
-        lda #5 ; 5 is green, for debug
+        ;lda #5 ; 5 is green, for debug
         sta bkg
         lda #0 ; black for the border
         sta border
@@ -139,7 +139,7 @@ init    lda #0 ; 0 is black
         sta $fb
         lda #>colmem
         sta $fc
-        lda #$5
+        lda #$0
         sta $fd
         jsr tuhat
         jsr randinit
@@ -172,20 +172,7 @@ randinit
         sta $d412 ; voice 3 control register
         rts
 
-array   ;dcb 40,0 ; stats for debug...
-        ;dcb 40,$10
-        ;dcb 40,$20
-        ;dcb 40,$38
-        ;dcb 40,$40
-        ;dcb 40,$60
-        ;dcb 360,$70
-        ;dcb 40,$88
-        ;dcb 80,$a0
-        ;dcb 40,$b0
-        ;dcb 40,$c8
-        ;dcb 120,$e0
-        ;dcb 40,$f0
-        ;dcb 40,$ff
-        dcb 24*40,0 ; start: 24 lines of empty
+array   dcb 24*40,0 ; start: 24 lines of empty
         dcb 40,$ff    ; and 1 line of white
-colors  dcb 0,0,9,9,2,2,8,8,4,4,4,7,7,7,1,1
+colors  dcb 0,0,12,15,9,9,2,2,8,8,8,7,7,7,1,1,1
+
