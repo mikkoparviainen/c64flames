@@ -6,7 +6,10 @@ colmem=$d800
 scrmem=$0400
 rowstr=colmem+24*40
 rowlen=40
-decay=$b
+decay=$10
+randdecay=$5
+randlimit=$f0
+rand=$d41b ; sid voice 3 
         jsr init
         jsr flames
         rts
@@ -54,6 +57,7 @@ inner   ;lda ($fb),y
         jmp cont
 subt    clc
         sbc #decay
+        jsr randsub
 cont    pha ; save next row-$20 as current row on stack
 
         lsr a ; divide the number by 16 for an index into the
@@ -71,7 +75,6 @@ cont    pha ; save next row-$20 as current row on stack
 
         iny
         cpy #rowlen ; row
-        ;cpy #2 ; do two columns for debug
         beq noinner
         jmp inner
 noinner dex
@@ -95,6 +98,30 @@ flamend ;rts
         jmp mainl
 cur     byte 0
 
+randsub pha
+        lda rand
+        cmp #80
+        bcs rand1
+        pla
+        rts
+rand1   cmp #160
+        bcs rand2
+        pla
+        jsr addl
+        rts
+rand2   pla
+        jsr addl
+        jsr addl
+        rts
+
+addl    cmp #randlimit
+        bcc addreal
+        lda #255
+        rts
+addreal clc
+        adc #randdecay
+        rts
+
 init    lda #0 ; 0 is black
         lda #5 ; 5 is green, for debug
         sta bkg
@@ -115,6 +142,7 @@ init    lda #0 ; 0 is black
         lda #$5
         sta $fd
         jsr tuhat
+        jsr randinit
         rts
 
 tuhat   ldx #4; $fb-$fc target, $fd number, x number of inner loops
@@ -135,6 +163,15 @@ tinner  sta ($fb),y
         sta $fc
         jmp touter
 tend    rts
+
+randinit
+        lda #$ff ; max freq for SID
+        sta $d40e ; voice 3 freq low byte
+        sta $d40f ; voice 3 freq hi byte
+        lda #$80 ; noise waveform, gate bit off
+        sta $d412 ; voice 3 control register
+        rts
+
 array   ;dcb 40,0 ; stats for debug...
         ;dcb 40,$10
         ;dcb 40,$20
