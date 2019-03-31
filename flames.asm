@@ -6,6 +6,7 @@ colmem=$d800
 scrmem=$0400
 rowstr=colmem+24*40
 rowlen=40
+decay=$b
         jsr init
         jsr flames
         rts
@@ -52,7 +53,7 @@ inner   ;lda ($fb),y
         lda #0
         jmp cont
 subt    clc
-        sbc #$20
+        sbc #decay
 cont    pha ; save next row-$20 as current row on stack
 
         lsr a ; divide the number by 16 for an index into the
